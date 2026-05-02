@@ -22,3 +22,10 @@ jobs:
 
       - name: Run GhostBuster Check
         run: python scripts/verify_dependencies.py
+      
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: ghostbuster-report
+          path: report.json
