@@ -1,6 +1,7 @@
 import ast
 import requests
 import sys
+import re
 
 # Extract imports from Python file
 def extract_imports(file_path):
@@ -36,8 +37,11 @@ def main():
     failed = False
 
     for pkg in packages:
-        if pkg == "sys" or pkg == "os":
-            continue  # skip built-in modules
+        if pkg in ["sys", "os"]:
+            continue
+
+        if is_suspicious(pkg):
+            print(f"Suspicious package name detected: {pkg}")
 
         exists = check_pypi(pkg)
 
@@ -45,13 +49,29 @@ def main():
             print(f"HALLUCINATION DETECTED: '{pkg}' NOT found on PyPI")
             failed = True
         else:
-            print(f" {pkg} exists")
+            print(f"{pkg} exists")
 
     if failed:
         print("\n Pipeline FAILED due to hallucinated dependencies")
         sys.exit(1)
     else:
         print("\n All dependencies are valid")
+
+
+def is_suspicious(pkg):
+    patterns = [
+        r"ultimate",
+        r"secure",
+        r"pro",
+        r"ai",
+        r"nextgen",
+        r"v\d+"
+    ]
+
+    for p in patterns:
+        if re.search(p, pkg.lower()):
+            return True
+    return False
 
 
 if __name__ == "__main__":
