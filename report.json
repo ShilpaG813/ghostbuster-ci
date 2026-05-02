@@ -1,0 +1,14 @@
+{
+    "packages_checked": [
+        "requests",
+        "super_secure_auth_ultimate_v2"
+    ],
+    "issues": [
+        {
+            "package": "super_secure_auth_ultimate_v2",
+            "status": "not_found",
+            "reason": "Possible AI hallucination"
+        }
+    ],
+    "result": "FAIL"
+}

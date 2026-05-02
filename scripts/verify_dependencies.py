@@ -2,8 +2,9 @@ import ast
 import requests
 import sys
 import re
+import json
 
-# Extract imports from Python file
+# Extract imports
 def extract_imports(file_path):
     with open(file_path, "r") as f:
         tree = ast.parse(f.read())
@@ -21,58 +22,65 @@ def extract_imports(file_path):
     return packages
 
 
-# Check if package exists on PyPI
+# Check PyPI
 def check_pypi(package):
     url = f"https://pypi.org/pypi/{package}/json"
-    response = requests.get(url)
-    return response.status_code == 200
+    return requests.get(url).status_code == 200
 
 
+# Suspicious pattern detection
+def is_suspicious(pkg):
+    patterns = ["ultimate", "secure", "pro", "ai", "nextgen", "v"]
+    return any(p in pkg.lower() for p in patterns)
+
+
+# MAIN FUNCTION (this was missing)
 def main():
     file_to_check = "app.py"
     packages = extract_imports(file_to_check)
 
-    print(f"Checking dependencies: {packages}")
+    report = {
+        "packages_checked": list(packages),
+        "issues": [],
+        "result": "PASS"
+    }
 
-    failed = False
+    print(f" Checking dependencies: {packages}")
 
     for pkg in packages:
         if pkg in ["sys", "os"]:
             continue
 
-        if is_suspicious(pkg):
-            print(f"Suspicious package name detected: {pkg}")
-
+        suspicious = is_suspicious(pkg)
         exists = check_pypi(pkg)
 
+        if suspicious:
+            print(f" Suspicious package: {pkg}")
+
         if not exists:
-            print(f"HALLUCINATION DETECTED: '{pkg}' NOT found on PyPI")
-            failed = True
+            print(f" HALLUCINATION DETECTED: {pkg}")
+
+            report["issues"].append({
+                "package": pkg,
+                "status": "not_found",
+                "reason": "Possible AI hallucination"
+            })
+
+            report["result"] = "FAIL"
         else:
             print(f"{pkg} exists")
 
-    if failed:
-        print("\n Pipeline FAILED due to hallucinated dependencies")
+    # Save report
+    with open("report.json", "w") as f:
+        json.dump(report, f, indent=4)
+
+    if report["result"] == "FAIL":
+        print("\n Pipeline FAILED")
         sys.exit(1)
     else:
-        print("\n All dependencies are valid")
+        print("\n All dependencies valid")
 
 
-def is_suspicious(pkg):
-    patterns = [
-        r"ultimate",
-        r"secure",
-        r"pro",
-        r"ai",
-        r"nextgen",
-        r"v\d+"
-    ]
-
-    for p in patterns:
-        if re.search(p, pkg.lower()):
-            return True
-    return False
-
-
+# THIS LINE RUNS EVERYTHING
 if __name__ == "__main__":
     main()
