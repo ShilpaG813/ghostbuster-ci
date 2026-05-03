@@ -84,7 +84,7 @@ def main():
         "result": "PASS"
     }
 
-    print(f"\n🔍 Checking dependencies: {packages}\n")
+    print(f"\n Checking dependencies: {packages}\n")
 
     # -------------------------------
     # Package Validation
@@ -94,12 +94,12 @@ def main():
             continue
 
         if is_suspicious(pkg):
-            print(f"⚠️ Suspicious package name: {pkg}")
+            print(f" Suspicious package name: {pkg}")
 
         exists = check_pypi(pkg)
 
         if not exists:
-            print(f"🚨 HALLUCINATION DETECTED: {pkg}")
+            print(f" HALLUCINATION DETECTED: {pkg}")
 
             report["issues"].append({
                 "type": "package",
@@ -110,19 +110,19 @@ def main():
 
             report["result"] = "FAIL"
         else:
-            print(f"✅ {pkg} exists")
+            print(f" {pkg} exists")
 
     # -------------------------------
     # Function Validation
     # -------------------------------
-    print("\n🔍 Checking function imports...\n")
+    print("\n Checking function imports...\n")
 
     for module, func in functions:
         if module:
             exists = function_exists(module, func)
 
             if not exists:
-                print(f"🚨 FUNCTION HALLUCINATION: {func} not found in {module}")
+                print(f" FUNCTION HALLUCINATION: {func} not found in {module}")
 
                 report["issues"].append({
                     "type": "function",
@@ -134,7 +134,7 @@ def main():
 
                 report["result"] = "FAIL"
             else:
-                print(f"✅ {func} exists in {module}")
+                print(f" {func} exists in {module}")
 
     # -------------------------------
     # Save Report
@@ -149,7 +149,7 @@ def main():
         print("\n❌ Pipeline FAILED")
         sys.exit(1)
     else:
-        print("\n✅ All checks passed")
+        print("\n All checks passed")
 
 
 # -------------------------------
