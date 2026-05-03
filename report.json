@@ -1,13 +1,21 @@
 {
     "packages_checked": [
-        "requests",
-        "super_secure_auth_ultimate_v2"
+        "super_secure_auth_ultimate_v2",
+        "requests"
     ],
     "issues": [
         {
-            "package": "super_secure_auth_ultimate_v2",
+            "type": "package",
+            "name": "super_secure_auth_ultimate_v2",
             "status": "not_found",
             "reason": "Possible AI hallucination"
+        },
+        {
+            "type": "function",
+            "module": "requests",
+            "function": "super_secure_login",
+            "status": "not_found",
+            "reason": "AI hallucinated function"
         }
     ],
     "result": "FAIL"

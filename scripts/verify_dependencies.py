@@ -4,7 +4,9 @@ import sys
 import re
 import json
 
-# Extract imports
+# -------------------------------
+# Extract imported packages
+# -------------------------------
 def extract_imports(file_path):
     with open(file_path, "r") as f:
         tree = ast.parse(f.read())
@@ -22,22 +24,59 @@ def extract_imports(file_path):
     return packages
 
 
-# Check PyPI
+# -------------------------------
+# Extract imported functions
+# -------------------------------
+def extract_functions(file_path):
+    with open(file_path, "r") as f:
+        tree = ast.parse(f.read())
+
+    functions = []
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom):
+            module = node.module
+            for name in node.names:
+                functions.append((module, name.name))
+
+    return functions
+
+
+# -------------------------------
+# Check PyPI package existence
+# -------------------------------
 def check_pypi(package):
     url = f"https://pypi.org/pypi/{package}/json"
     return requests.get(url).status_code == 200
 
 
-# Suspicious pattern detection
+# -------------------------------
+# Check if function exists in module
+# -------------------------------
+def function_exists(module, func):
+    try:
+        imported_module = __import__(module, fromlist=[func])
+        return hasattr(imported_module, func)
+    except:
+        return False
+
+
+# -------------------------------
+# Detect suspicious names
+# -------------------------------
 def is_suspicious(pkg):
     patterns = ["ultimate", "secure", "pro", "ai", "nextgen", "v"]
     return any(p in pkg.lower() for p in patterns)
 
 
-# MAIN FUNCTION (this was missing)
+# -------------------------------
+# MAIN FUNCTION
+# -------------------------------
 def main():
     file_to_check = "app.py"
+
     packages = extract_imports(file_to_check)
+    functions = extract_functions(file_to_check)
 
     report = {
         "packages_checked": list(packages),
@@ -45,42 +84,76 @@ def main():
         "result": "PASS"
     }
 
-    print(f" Checking dependencies: {packages}")
+    print(f"\n🔍 Checking dependencies: {packages}\n")
 
+    # -------------------------------
+    # Package Validation
+    # -------------------------------
     for pkg in packages:
         if pkg in ["sys", "os"]:
             continue
 
-        suspicious = is_suspicious(pkg)
+        if is_suspicious(pkg):
+            print(f"⚠️ Suspicious package name: {pkg}")
+
         exists = check_pypi(pkg)
 
-        if suspicious:
-            print(f" Suspicious package: {pkg}")
-
         if not exists:
-            print(f" HALLUCINATION DETECTED: {pkg}")
+            print(f"🚨 HALLUCINATION DETECTED: {pkg}")
 
             report["issues"].append({
-                "package": pkg,
+                "type": "package",
+                "name": pkg,
                 "status": "not_found",
                 "reason": "Possible AI hallucination"
             })
 
             report["result"] = "FAIL"
         else:
-            print(f"{pkg} exists")
+            print(f"✅ {pkg} exists")
 
-    # Save report
+    # -------------------------------
+    # Function Validation
+    # -------------------------------
+    print("\n🔍 Checking function imports...\n")
+
+    for module, func in functions:
+        if module:
+            exists = function_exists(module, func)
+
+            if not exists:
+                print(f"🚨 FUNCTION HALLUCINATION: {func} not found in {module}")
+
+                report["issues"].append({
+                    "type": "function",
+                    "module": module,
+                    "function": func,
+                    "status": "not_found",
+                    "reason": "AI hallucinated function"
+                })
+
+                report["result"] = "FAIL"
+            else:
+                print(f"✅ {func} exists in {module}")
+
+    # -------------------------------
+    # Save Report
+    # -------------------------------
     with open("report.json", "w") as f:
         json.dump(report, f, indent=4)
 
+    # -------------------------------
+    # Final Result
+    # -------------------------------
     if report["result"] == "FAIL":
-        print("\n Pipeline FAILED")
+        print("\n❌ Pipeline FAILED")
         sys.exit(1)
     else:
-        print("\n All dependencies valid")
+        print("\n✅ All checks passed")
 
 
-# THIS LINE RUNS EVERYTHING
+# -------------------------------
+# RUN
+# -------------------------------
 if __name__ == "__main__":
     main()
